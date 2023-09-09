@@ -1,128 +1,90 @@
-import React, { useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import React from 'react'
+import { NavLink,useNavigate  } from 'react-router-dom'
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; 
+import {Formik, Form} from 'formik';
+import TextField from './TextField';
+import TextArea from './TextArea';
+import * as Yup from 'yup';
+
+
+
 
 const Register = () => {
+    const navigate = useNavigate(); 
+    const validate = Yup.object({
+        name        : Yup.string().max(15, 'Must be 15 characters or less').required('Name is required'),
+        email       : Yup.string().email('Email is invalid').required('Email is required'),
+        age         : Yup.number().typeError('Age must be a number').integer('Age must be an integer').required('Age is required'),
+        mobile      : Yup.string().matches(/^[0-9]{10}$/, 'Mobile number must be exactly 10 digits')
+                    .required('Mobile number is required'),
+        work        : Yup.string().required('Work is required'),
+        address     : Yup.string().required('Address is required'),
+        description : Yup.string().required('Description is required'), 
 
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        age: '',
-        mobile: '',
-        work: '',
-        address: '',
-        description: '',
+        // password : Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
+        // confirmPassword : Yup.string().oneOf([Yup.ref('password'), null], 'Password must be match with confirm password').required('Confirm password is required'), 
+
     });
-    const [formErrors, setFormErrors] = useState({});
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({
-            ...formData,
-            [name]: value,
-        });
-
-          // Clear the corresponding error when the user starts typing
-          setFormErrors({
-            ...formErrors,
-            [name]: '',
-        });
-    };
-
-    const addUser =  async(e) => {
-        e.preventDefault();
-        // const {name, email, age, mobile, work, address, description} = formData;
-        console.log(formData);
+    const addUser =  async(formData,resetForm) => {
+      
         try {
-            const response = await axios.post('http://localhost:5000/api/users/register', formData);
-            console.log(response);
-            setFormData({
-                name: '',
-                email: '',
-                age: '',
-                mobile: '',
-                work: '',
-                address: '',
-                description: '',
-            });
-           toast.success("Data saved successfully");
+             await axios.post('http://localhost:5000/api/users/register', formData);
+             toast.success("Data saved successfully");
+             resetForm();
+             navigate('/');
         } catch (error) {
-            if (error.response && error.response.data.errors) {
-                setFormErrors(error.response.data.errors);
+            if (error.response && error.response.status === 404) {
+                toast.error(error.response.data);
             } else {
                 toast.error("Error saving data");
             }
         }
     }
     return (
-        <>
-            <div className='container'>
-                <NavLink to="/" >Home</NavLink>
+        <Formik
+                initialValues={{
+                    name: '',
+                    email: '',
+                    age: '',
+                    mobile: '',
+                    work: '',
+                    address: '',
+                    description: '',
+                }}
 
-                <form className='mt-4'>
-                    <div className='row'>
-                        <div className="mb-3 col-lg-6 col-md-6 col-12 col-lg-6 col-md-6 col-12">
-                            <label htmlFor="exampleInputEmail1" className="form-label">Name</label>
-                            <input type="text" className="form-control" name="name" value={formData.name}
-                                onChange={handleInputChange} />
-                                 
-                            <div id="emailHelp" className="form-text"></div>
-                        </div>
+                validationSchema={validate}
 
-
-                        <div className="mb-3 col-lg-6 col-md-6 col-12">
-                            <label htmlFor="exampleInputEmail1" className="form-label">Email</label>
-                            <input type="email" className="form-control" value={formData.email}
-                                onChange={handleInputChange} name="email" />
-                            <div id="emailHelp" className="form-text"></div>
-                        </div>
-
-
-                        <div className="mb-3 col-lg-6 col-md-6 col-12">
-                            <label htmlFor="exampleInputEmail1" className="form-label">Age</label>
-                            <input type="text" className="form-control" value={formData.age}
-                                onChange={handleInputChange} name="age" />
-                            <div id="emailHelp" className="form-text"></div>
-                        </div>
-
-                        <div className="mb-3 col-lg-6 col-md-6 col-12">
-                            <label htmlFor="exampleInputEmail1" className="form-label">Mobile</label>
-                            <input type="text" className="form-control" value={formData.mobile}
-                                onChange={handleInputChange} name="mobile" />
-                            <div id="emailHelp" className="form-text"></div>
-                        </div>
-
-
-                        <div className="mb-3 col-lg-6 col-md-6 col-12">
-                            <label htmlFor="exampleInputEmail1" className="form-label">Work</label>
-                            <input type="text" className="form-control" value={formData.work}
-                                onChange={handleInputChange} name="work" />
-                            <div id="emailHelp" className="form-text"></div>
-                        </div>
-
-
-                        <div className="mb-3 col-lg-6 col-md-6 col-12">
-                            <label htmlFor="exampleInputEmail1" className="form-label">Address</label>
-                            <input type="text" className="form-control" value={formData.address}
-                                onChange={handleInputChange} name="address" />
-                            <div id="emailHelp" className="form-text"></div>
-                        </div>
-
-                        <div className="mb-3 col-lg-12 col-md-12 col-12">
-                            <label htmlFor="exampleFormControlTextarea1" className="form-label">Description</label>
-                            <textarea className="form-control" value={formData.description}
-                                onChange={handleInputChange} rows="3" name="description" ></textarea>
-                        </div>
-
-                        <button type="submit" onClick={addUser} className="btn btn-primary">Submit</button>
+                onSubmit={(values, { resetForm }) => {
+                     addUser(values,resetForm);
+                }}
+    >
+        {/* {(formik) => ( */}
+            <>
+            <div className='container mt-5'>
+              <NavLink to="/" >Home</NavLink>
+                <Form>
+                   <div className='row'>
+                     <TextField label="Name" name="name" type="text"></TextField>
+                     <TextField label="Email" name="email" type="email"></TextField>
+                     <TextField label="Age" name="age" type="text"></TextField>
+                     <TextField label="Mobile" name="mobile" type="text"></TextField>
+                     <TextField label="Work" name="work" type="text"></TextField>
+                     <TextField label="Address" name="address" type="text"></TextField>
+                     <TextArea label="Description" name="description" type="text"></TextArea>
+                     {/* <LinearProgress color="primary" /> */}
+                     <button type="submit"  className="btn btn-primary mt-4">Submit</button>
                     </div>
+                </Form> 
+                </div>
+            </>
 
-
-                </form>
-            </div>
-        </>
+        {/* )
+        } */}
+    </Formik>
+       
     )
 }
 

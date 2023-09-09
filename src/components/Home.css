@@ -1,0 +1,18 @@
+
+.skeleton-loading {
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.skeleton-row {
+  height: 20px;
+  background-color: #e0e0e0;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+
+.skeleton-row:last-child {
+  margin-bottom: 0;
+}
